@@ -182,7 +182,11 @@ const renderTask = (taskData) => {
   descEl.innerText=description || ''
   const moreInfoEl=document.createElement('div')
   moreInfoEl.classList.add('show_sub_tasks')
-  moreInfoEl.innerText='Show Info'  
+  moreInfoEl.innerText='Show Info' 
+  const editTaskEl=document.createElement('div')
+  editTaskEl.classList.add('edit_task_el')
+  editTaskEl.innerText='Edit' 
+  const bulletIcon=renderBulletIcon()
   taskLineWrapper.append(
     dateEl,
     moreInfoEl
@@ -194,8 +198,9 @@ const renderTask = (taskData) => {
     taskLineWrapper
   )
   iconWrapper.append(
-    renderBulletIcon(),
-    taskMainEl
+    bulletIcon,
+    taskMainEl,
+    editTaskEl
   )
   const sub_tasks=SUB_TASKS ? JSON.parse(SUB_TASKS) : []
   const taskSubWrapper=document.createElement('div')
@@ -208,6 +213,22 @@ const renderTask = (taskData) => {
       taskSubWrapper.classList.add('show')
       moreInfoEl.innerText='Hide Info'
     }
+  })
+  editTaskEl.addEventListener('click', function() {
+    taskMainEl.style.display='none'
+    bulletIcon.style.display='none'
+    editTaskEl.style.display='none'
+    taskSubWrapper.classList.remove('show')
+    moreInfoEl.innerText='Show Info'
+    taskParentEl.prepend(edit_task(taskData, task => {
+      const tempTask=JSON.parse(JSON.stringify(task))
+      tempTask.sub_tasks=SUB_TASKS
+      updateSubTask(id, tempTask)
+    }, () => {
+      taskMainEl.style.display='block'
+      bulletIcon.style.display='block'
+      editTaskEl.style.display='block'    
+    }))
   })
   taskSubWrapper.append(
     renderSubTask(sub_tasks, updateTask),
@@ -372,4 +393,77 @@ const updateSubTask = (taskId, data) => {
   } else {
     showMessage('Title and date is mandatory')
   }
+}
+
+const edit_task = (task, updateTask, cancelCbk) => {
+  const total_time=task.TOTAL_TIME || ''
+  const hourSplitter=total_time ? total_time.split('h ') : []
+  const hour=hourSplitter[0] ? hourSplitter[0] : ''
+  const min=hourSplitter[1] ? hourSplitter[1].split('m') : ''
+  const taskUpdateWrapper=document.createElement('div')
+  taskUpdateWrapper.classList.add('task_update')
+  const titleInp=document.createElement('input')
+  titleInp.classList.add('input_cont')
+  titleInp.id='task_title'
+  titleInp.placeholder='title'
+  titleInp.value=task.TITLE || ""
+  titleInp.maxLength=50
+  const descInp=document.createElement('textarea')
+  descInp.classList.add('textarea_cont')
+  descInp.placeholder='Description'
+  descInp.value=task.DESCRIPTION || ""
+  descInp.rows=3
+  const dateInp=document.createElement('input')
+  dateInp.classList.add('input_cont')
+  dateInp.value=task.DATE || ""
+  dateInp.type='date'
+  dateInp.id='task_date'
+  const hourInp=document.createElement('input')
+  hourInp.classList.add('time_hours', 'input_cont')
+  hourInp.value=hour || ""
+  hourInp.type='text'
+  hourInp.placeholder='hours'
+  const minInp=document.createElement('input')
+  minInp.classList.add('time_minutes', 'input_cont')
+  minInp.value=min || ""
+  minInp.type='text'
+  minInp.placeholder='minutes'
+  const time_wrapper_el=document.createElement('div')
+  time_wrapper_el.classList.add('task_time')
+  time_wrapper_el.append(
+    hourInp,
+    minInp
+  )
+  taskUpdateWrapper.append(
+    titleInp,
+    dateInp,
+    descInp,
+    time_wrapper_el
+  )
+  const updateWrapperEl=document.createElement('div')
+  updateWrapperEl.classList.add('update_wrapper')
+  const updateTaskEl=document.createElement('div')
+  updateTaskEl.classList.add('update_task')
+  updateTaskEl.innerText='Update Task'
+  const cancelTaskEl=document.createElement('div')
+  cancelTaskEl.classList.add('cancel_update_task')
+  cancelTaskEl.innerText='Cancel Task'
+  cancelTaskEl.addEventListener('click', () => {
+    taskUpdateWrapper.remove()
+    cancelCbk()
+  })
+  updateTaskEl.addEventListener('click', function() {
+    updateTask({
+      title: titleInp.value || '',
+      description: descInp.value || '',
+      date: dateInp.value || '',
+      total_time: (hourInp.value ? ((hourInp.value || '') + 'h ') : '') + (minInp.value ? ((minInp.value || '') + 'm') : '')
+    })
+  })
+  updateWrapperEl.append(
+    updateTaskEl,
+    cancelTaskEl
+  )
+  taskUpdateWrapper.append(updateWrapperEl)
+  return taskUpdateWrapper
 }

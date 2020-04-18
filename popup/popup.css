@@ -29,7 +29,8 @@ body {
     text-transform: uppercase;
     font-weight: bold;
 }
-.task_create {
+.task_create,
+.task_update {
     padding: 10px 0px;
     background-color: #ffffff;
     border-radius: 5px;
@@ -251,4 +252,22 @@ body {
 .subtask_cancel_el {
     padding-left: 5px;
     cursor: pointer;
+}
+.edit_task_el {
+    cursor: pointer;
+}
+#task_title,
+#task_date {
+    margin-bottom: 10px;
+}
+.task_update {
+    padding: 10px 15px;
+}
+.update_wrapper {
+    display: flex;
+}
+.update_task,
+.cancel_update_task {
+    cursor: pointer;
+    padding: 10px;
 }
