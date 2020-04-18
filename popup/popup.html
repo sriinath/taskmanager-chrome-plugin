@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Task Tracker</title>
+        <link rel="stylesheet" type="text/css" href="popup.css">
+        <script src="../assets/js/jquery.min.js"></script>  
+        <script src="popup.js"></script>
+    </head>
+    <body>
+        <div class="task_wrapper">
+            <div class="user_content">Hello, <span id="username"></span></div>
+            <div class="task_body">
+                <div id="message"></div>
+                <div class="task_cont">
+                    <div class="task_cont_title">Add Task</div>
+                    <div class="task_create">
+                        <div class="task_main_wrapper">
+                            <input type="text" class="input_cont" id="task_title" maxlength="50" title="title" placeholder="title" />
+                            <div class="wrapper_cont">
+                                <input type="date" class="input_cont" id="task_date" />
+                                <div class="add_wrapper_details">
+                                    <span>Add Details</span>
+                                    <img class="wrapper_icon_details" title="Add Information" src="../assets/fonts/svg/angle-down-solid.svg" alt="details_lower_icon"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task_sub_wrapper">
+                            <textarea id="desc" rows="3" class="textarea_cont" placeholder="Description"></textarea>
+                            <div class="task_time">
+                                <input type="number" max='23' id="task_hours" class="time_hours input_cont" placeholder="hours" />
+                                <input type="number" max='60' id="task_min" class="time_minutes input_cont" placeholder="minutes"/>
+                            </div>
+                        </div>
+                        <div class="create_task">Add Task</div>
+                    </div>
+                    <div class="tasks_container">
+                        <div class="container_title my_tasks">My Tasks&nbsp;&nbsp;<span>Hide</span></div>
+                        <div id="mytasks" class="mytasks_list show">
+                        </div>
+                        <div class="container_title completed_tasks">Completed Tasks&nbsp;&nbsp;<span>Show</span></div>
+                        <div id="completed_tasks" class="completed_list">
+                        </div>    
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
