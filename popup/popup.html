@@ -3,6 +3,7 @@
     <head>
         <title>Task Tracker</title>
         <link rel="stylesheet" type="text/css" href="popup.css">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
         <script src="../assets/js/jquery.min.js"></script>  
         <script src="popup.js"></script>
     </head>
@@ -20,7 +21,7 @@
                                 <input type="date" class="input_cont" id="task_date" />
                                 <div class="add_wrapper_details">
                                     <span>Add Details</span>
-                                    <img class="wrapper_icon_details" title="Add Information" src="../assets/fonts/svg/angle-down-solid.svg" alt="details_lower_icon"/>
+                                    <i class="font-big-icon fas fa-angle-down"></i>
                                 </div>
                             </div>
                         </div>
@@ -31,7 +32,10 @@
                                 <input type="number" max='60' id="task_min" class="time_minutes input_cont" placeholder="minutes"/>
                             </div>
                         </div>
-                        <div class="create_task">Add Task</div>
+                        <div class="create_task">
+                            Add Task
+                            <i class="font-big-icon fas fa-plus"></i>
+                        </div>
                     </div>
                     <div class="tasks_container">
                         <div class="container_title my_tasks">My Tasks&nbsp;&nbsp;<span>Hide</span></div>

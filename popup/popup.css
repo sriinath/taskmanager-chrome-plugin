@@ -113,15 +113,17 @@ body {
     width: 50%;
 }
 .create_task {
-    padding: 15px;
     margin: auto;
-    width: 80px;
+    width: 150px;
     border: 1px solid;
     text-align: center;
     background: #3b9a6f;
     color: #fff;
     text-transform: uppercase;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .create_task:hover {
     background: #fff;
@@ -202,16 +204,28 @@ body {
     padding: 0px 0px 15px 10px;
 }
 .bullet_el {
-    width: 15px;
-    height: 15px;
-    border: 2px solid;
+    width: 24px;
+    height: 24px;
     margin: 0px 10px;
+    border: 2px solid;
     border-radius: 100%;
     cursor: pointer;
-    min-width: 15px;
+    min-width: 24px;
+    position: relative;
+}
+.bullet_el i {
+    display: none;
+    color: #3b9a6f;
+    position: absolute;
+    padding: 0px;
+    top: 4px;
+    text-align: center;
 }
 .bullet_el:hover {
     background-color: #f2f3f4;
+}
+.bullet_el:hover i {
+    display: block;
 }
 .taks_main_wrapper,
 .subtask_icon_wrapper {
@@ -276,9 +290,46 @@ body {
 }
 .update_wrapper {
     display: flex;
+    justify-content: space-around;
+    padding-top: 15px;
 }
 .update_task,
 .cancel_update_task {
+    padding-left: 15px;
+    margin: 0px 10px;
+    border: 1px solid;
     cursor: pointer;
+}
+.update_task:hover {
+    color: #3b9a6f;
+    background: #fff;
+}
+.cancel_update_task:hover {
+    color: #e75b65;
+    background: #fff;
+}
+.update_task {
+    color: #fff;
+    background: #3b9a6f;
+}
+.cancel_update_task {
+    color: #fff;
+    background: #e75b65;
+}
+.fas {
     padding: 10px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    vertical-align: middle;
+}
+.font-small-icon {
+    font-size: 12px;
+}
+.font-avg-icon {
+    font-size: 18px;
+}
+.font-big-icon {
+    font-size: 24px;
 }
