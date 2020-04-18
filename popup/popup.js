@@ -22,6 +22,9 @@ const setCurrentDate = () => document.getElementById('task_date').value=new Date
 const renderBulletIcon = () => {
   const bulletEl= document.createElement('div')
   bulletEl.classList.add('bullet_el')
+  const bulletIcon=document.createElement('i')
+  bulletIcon.classList.add('fas', 'font-avg-icon', 'fa-check')
+  bulletEl.append(bulletIcon)
   return bulletEl
 }
 
@@ -98,10 +101,10 @@ const bindEvents = () => {
                 console.log("error: ", chrome.runtime.lastError);
               } else{           
                 if(data === 'Success') {
-                  showMessage('Successfully created task', 'green')
+                  showMessage('Successfully created task', '#3b9a6f')
                   getTasks(token)
                 } else {
-                  showMessage('Failure in creating task', 'red')
+                  showMessage('Failure in creating task', '#e75b65')
                 }
               }
             }
@@ -109,7 +112,7 @@ const bindEvents = () => {
         })
       })
     } else {
-      showMessage('Title and date is mandatory', 'red')
+      showMessage('Title and date is mandatory', '#e75b65')
     }
   })
 }
@@ -188,12 +191,12 @@ const renderTask = (taskData) => {
   const moreInfoEl=document.createElement('div')
   moreInfoEl.classList.add('show_sub_tasks')
   moreInfoEl.innerText='Show Details' 
-  const editTaskEl=document.createElement('div')
-  editTaskEl.classList.add('edit_task_el')
-  editTaskEl.innerText='Edit' 
-  const delTaskEl=document.createElement('div')
-  delTaskEl.classList.add('delete_task_el')
-  delTaskEl.innerText='Delete' 
+  const editTaskEl=document.createElement('i')
+  editTaskEl.classList.add("font-avg-icon", "fas", "fa-pencil-alt")
+  editTaskEl.title='Edit Details'
+  const delTaskEl=document.createElement('i')
+  delTaskEl.classList.add('font-avg-icon', 'fas', 'fa-trash')
+  delTaskEl.title='Delete Task'
   const bulletIcon=renderBulletIcon()
   taskLineWrapper.append(
     dateEl,
@@ -227,6 +230,7 @@ const renderTask = (taskData) => {
     taskMainEl.style.display='none'
     bulletIcon.style.display='none'
     editTaskEl.style.display='none'
+    delTaskEl.style.display='none'
     taskSubWrapper.classList.remove('show')
     moreInfoEl.innerText='Show Details'
     taskParentEl.prepend(edit_task(taskData, task => {
@@ -236,7 +240,8 @@ const renderTask = (taskData) => {
     }, () => {
       taskMainEl.style.display='block'
       bulletIcon.style.display='block'
-      editTaskEl.style.display='block'    
+      editTaskEl.style.display='block'   
+      delTaskEl.style.display='block' 
     }))
   })
   delTaskEl.addEventListener('click', function() {
@@ -259,10 +264,10 @@ const renderTask = (taskData) => {
             })
           } else if(data) {
             if(data === 'Success') {
-              showMessage('Successfully Deleted task', 'green')
+              showMessage('Successfully Deleted task', '#3b9a6f')
               getTasks(token)
             } else {
-              showMessage('Failure in deleting task', 'red')
+              showMessage('Failure in deleting task', '#e75b65')
             }
           }
         }
@@ -299,12 +304,12 @@ const renderSubTask = (sub_tasks, updateTask) => {
       )
       const subTaskIconWrapper=document.createElement('div')
       subTaskIconWrapper.classList.add('subtask_icon_wrapper')
-      const editBtn=document.createElement('div')
-      editBtn.classList.add('subtask_edit_el')
-      editBtn.innerText='Edit'
-      const delBtn=document.createElement('div')
-      delBtn.classList.add('subtask_del_el')
-      delBtn.innerText='Delete'
+      const editBtn=document.createElement('i')
+      editBtn.classList.add("font-avg-icon", "fas", "fa-pencil-alt")
+      editBtn.title='Edit Details'
+      const delBtn=document.createElement('i')
+      delBtn.classList.add('font-avg-icon', 'fas', 'fa-trash')
+      delBtn.title='Delete Sub Task'
       editBtn.addEventListener('click', () => {
         const subTaskEditWrapper=createSubTask(task, updateTask, index, () => {
           subTaskIconWrapper.style.display='flex'
@@ -357,12 +362,14 @@ const createSubTask = (subTask, updateTask, index, cancelCbk) => {
   subTaskMinEl.placeholder='Minutes'
   subTaskMinEl.max=60
   subTaskMinEl.type='number'
-  const subTaskAddEl=document.createElement('div')
-  subTaskAddEl.classList.add('subtask_add_el')
-  subTaskAddEl.innerText=title ? 'Update' : 'Add'
+  const subTaskAddEl=document.createElement('i')
+  subTaskAddEl.classList.add('fas', 'font-big-icon', title ? 'fa-check' : 'fa-plus', 'subtask_add_el')
+  subTaskAddEl.style.color='#3b9a6f'
+  subTaskAddEl.title=title ? 'Update details' : 'Add Sub task'
   const subTaskCancelEl=document.createElement('div')
-  subTaskCancelEl.classList.add('subtask_cancel_el')
-  subTaskCancelEl.innerText='Cancel'
+  subTaskCancelEl.classList.add('fas', 'font-big-icon', 'fa-times', 'subtask_cancel_el')
+  subTaskCancelEl.style.color='#e75b65'
+  subTaskCancelEl.title='Cancel Update'
   const subTaskTimeWrapper=document.createElement('div')
   subTaskTimeWrapper.classList.add('subtask_time_wrapper')
   subTaskTimeWrapper.append(
@@ -382,7 +389,7 @@ const createSubTask = (subTask, updateTask, index, cancelCbk) => {
         total_time: (subTaskHoursEl.value ? subTaskHoursEl.value + 'h ' : '') + (subTaskMinEl.value ? subTaskMinEl.value + 'm' : '')
       }, index)  
     } else {
-      showMessage('Title is required to create sub task', 'red')
+      showMessage('Title is required to create sub task', '#e75b65')
     } 
   })
   subTaskCancelEl.addEventListener('click', cancelCbk)
@@ -435,17 +442,17 @@ const updateSubTask = (taskId, data) => {
             })
           } else if(data) {
             if(data === 'Success') {
-              showMessage('Successfully Updated task', 'green')
+              showMessage('Successfully Updated task', '#3b9a6f')
               getTasks(token)
             } else {
-              showMessage('Failure in updating task', 'red')
+              showMessage('Failure in updating task', '#e75b65')
             }
           }
         }
       })
     })
   } else {
-    showMessage('Title and date is mandatory', 'red')
+    showMessage('Title and date is mandatory', '#e75b65')
   }
 }
 
@@ -500,10 +507,18 @@ const edit_task = (task, updateTask, cancelCbk) => {
   updateWrapperEl.classList.add('update_wrapper')
   const updateTaskEl=document.createElement('div')
   updateTaskEl.classList.add('update_task')
-  updateTaskEl.innerText='Update Task'
+  updateTaskEl.title='Update Task'
+  updateTaskEl.innerText='Update'
   const cancelTaskEl=document.createElement('div')
   cancelTaskEl.classList.add('cancel_update_task')
-  cancelTaskEl.innerText='Cancel Task'
+  cancelTaskEl.title='Cancel Update'
+  cancelTaskEl.innerText='Cancel'
+  const updateTaskIcon=document.createElement('i')
+  updateTaskIcon.classList.add('fas', 'fa-check', 'font-big-icon')
+  const cancelTaskIcon=document.createElement('i')
+  cancelTaskIcon.classList.add('fas', 'fa-times', 'font-big-icon')
+  updateTaskEl.append(updateTaskIcon)
+  cancelTaskEl.append(cancelTaskIcon)
   cancelTaskEl.addEventListener('click', () => {
     taskUpdateWrapper.remove()
     cancelCbk()
