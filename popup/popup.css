@@ -9,8 +9,7 @@ body {
     padding: 10px 0px 30px;
 }
 .task_wrapper {
-    width: 350px;
-    height: 480px;
+    width: 400px;
     max-height: 600px;
 }
 .user_content {
@@ -116,7 +115,7 @@ body {
 .create_task {
     padding: 15px;
     margin: auto;
-    width: 150px;
+    width: 80px;
     border: 1px solid;
     text-align: center;
     background: #3b9a6f;
@@ -175,7 +174,6 @@ body {
     display: flex;
     align-items: center;
     padding: 10px 0px;
-    justify-content: space-between;
 }
 .task_date_cont,
 .sub_tasks_time {
@@ -219,15 +217,24 @@ body {
 .subtask_icon_wrapper {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 .subtask_icon_wrapper {
     border-top: 2px solid;
     padding: 5px 0px;
 }
 #message {
+    display: none;
     text-align: center;
     font-weight: bold;
-}
+    position: fixed;
+    top: 15px;
+    padding: 10px;
+    background: #fff;
+    border: 2px solid;
+    border-radius: 40px;
+    width: calc(100% - 40px);
+    box-sizing: border-box;}
 .subtask_time_wrapper {
     display: flex;
     align-items: center;
@@ -242,7 +249,9 @@ body {
 .subtask_add_el {
     cursor: pointer;
 }
-.subtask_edit_el {
+.subtask_edit_el,
+.subtask_del_el {
+    padding: 0px 5px;
     text-decoration: underline;
     cursor: pointer;
 }
@@ -253,7 +262,9 @@ body {
     padding-left: 5px;
     cursor: pointer;
 }
-.edit_task_el {
+.edit_task_el,
+.delete_task_el {
+    padding: 0px 5px; 
     cursor: pointer;
 }
 #task_title,

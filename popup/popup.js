@@ -98,10 +98,10 @@ const bindEvents = () => {
                 console.log("error: ", chrome.runtime.lastError);
               } else{           
                 if(data === 'Success') {
-                  showMessage('Successfully created task')
+                  showMessage('Successfully created task', 'green')
                   getTasks(token)
                 } else {
-                  showMessage('Failure in creating task')
+                  showMessage('Failure in creating task', 'red')
                 }
               }
             }
@@ -109,15 +109,16 @@ const bindEvents = () => {
         })
       })
     } else {
-      showMessage('Title and date is mandatory')
+      showMessage('Title and date is mandatory', 'red')
     }
   })
 }
 
-const showMessage = (message) => {
+const showMessage = (message, color) => {
   const msgEl=document.getElementById('message')
   msgEl.innerText=message
   msgEl.style.display='block'
+  msgEl.style.color=color || '#000'
   setTimeout(() => {
     msgEl.style.display='none'  
   }, 5000)
@@ -147,8 +148,12 @@ const renderTask = (taskData) => {
     const tempData=JSON.parse(JSON.stringify(taskData))
     sub=JSON.parse(tempData.SUB_TASKS)
     if(typeof(index) === 'number' && sub && sub[index]) {
-      sub[index]=data
-    } else {
+      if(data && !Object.keys(data).length) {
+        sub.splice(index, 1)
+      } else {
+        sub[index]=data
+      }
+    } else if(data && Object.keys(data).length) {
       sub.push(data)
     }
     updateSubTask(id, {
@@ -182,10 +187,13 @@ const renderTask = (taskData) => {
   descEl.innerText=description || ''
   const moreInfoEl=document.createElement('div')
   moreInfoEl.classList.add('show_sub_tasks')
-  moreInfoEl.innerText='Show Info' 
+  moreInfoEl.innerText='Show Details' 
   const editTaskEl=document.createElement('div')
   editTaskEl.classList.add('edit_task_el')
   editTaskEl.innerText='Edit' 
+  const delTaskEl=document.createElement('div')
+  delTaskEl.classList.add('delete_task_el')
+  delTaskEl.innerText='Delete' 
   const bulletIcon=renderBulletIcon()
   taskLineWrapper.append(
     dateEl,
@@ -200,7 +208,8 @@ const renderTask = (taskData) => {
   iconWrapper.append(
     bulletIcon,
     taskMainEl,
-    editTaskEl
+    editTaskEl,
+    delTaskEl
   )
   const sub_tasks=SUB_TASKS ? JSON.parse(SUB_TASKS) : []
   const taskSubWrapper=document.createElement('div')
@@ -208,10 +217,10 @@ const renderTask = (taskData) => {
   moreInfoEl.addEventListener('click', function() {
     if(taskSubWrapper.classList.contains('show')) {
       taskSubWrapper.classList.remove('show')
-      moreInfoEl.innerText='Show Info'
+      moreInfoEl.innerText='Show Details'
     } else {
       taskSubWrapper.classList.add('show')
-      moreInfoEl.innerText='Hide Info'
+      moreInfoEl.innerText='Hide Details'
     }
   })
   editTaskEl.addEventListener('click', function() {
@@ -219,7 +228,7 @@ const renderTask = (taskData) => {
     bulletIcon.style.display='none'
     editTaskEl.style.display='none'
     taskSubWrapper.classList.remove('show')
-    moreInfoEl.innerText='Show Info'
+    moreInfoEl.innerText='Show Details'
     taskParentEl.prepend(edit_task(taskData, task => {
       const tempTask=JSON.parse(JSON.stringify(task))
       tempTask.sub_tasks=SUB_TASKS
@@ -229,6 +238,36 @@ const renderTask = (taskData) => {
       bulletIcon.style.display='block'
       editTaskEl.style.display='block'    
     }))
+  })
+  delTaskEl.addEventListener('click', function() {
+    chrome.storage.local.get(['access_token'], function(result) {
+      showMessage('Delete task is initiated')
+      let token = result.access_token || ''
+      chrome.runtime.sendMessage({
+        'type': 'API',
+        'name': 'DELETE_TASK',
+        'token': token,
+        id
+      }, data => {
+        if(chrome.runtime.lastError) {
+          console.log("error: ", chrome.runtime.lastError);
+        } else{
+          if(data && data.refresh_token) {
+            showMessage('Token expired. Refreshing...')
+            chrome.runtime.sendMessage({
+              'type': 'refreshToken'
+            })
+          } else if(data) {
+            if(data === 'Success') {
+              showMessage('Successfully Deleted task', 'green')
+              getTasks(token)
+            } else {
+              showMessage('Failure in deleting task', 'red')
+            }
+          }
+        }
+      })
+    })
   })
   taskSubWrapper.append(
     renderSubTask(sub_tasks, updateTask),
@@ -263,6 +302,9 @@ const renderSubTask = (sub_tasks, updateTask) => {
       const editBtn=document.createElement('div')
       editBtn.classList.add('subtask_edit_el')
       editBtn.innerText='Edit'
+      const delBtn=document.createElement('div')
+      delBtn.classList.add('subtask_del_el')
+      delBtn.innerText='Delete'
       editBtn.addEventListener('click', () => {
         const subTaskEditWrapper=createSubTask(task, updateTask, index, () => {
           subTaskIconWrapper.style.display='flex'
@@ -271,10 +313,14 @@ const renderSubTask = (sub_tasks, updateTask) => {
         subTaskIconWrapper.style.display='none'
         subTaskWrapper.insertBefore(subTaskEditWrapper, subTaskIconWrapper)
       })
+      delBtn.addEventListener('click', () => {
+        updateTask({}, index)
+      })
       subTaskIconWrapper.append(
         renderBulletIcon(),
         subTaskCont,
-        editBtn
+        editBtn,
+        delBtn
       )
       subTaskWrapper.append(subTaskIconWrapper)
     })
@@ -302,11 +348,15 @@ const createSubTask = (subTask, updateTask, index, cancelCbk) => {
   subTaskHoursEl.id='subtask_hours'
   subTaskHoursEl.value=hour || ''
   subTaskHoursEl.placeholder='Hours'
+  subTaskHoursEl.type='number'
+  subTaskHoursEl.max=23
   const subTaskMinEl=document.createElement('input')
   subTaskMinEl.classList.add('subtask_min_inp', 'input_cont')
   subTaskMinEl.id='subtask_min'
   subTaskMinEl.value=min || ''
   subTaskMinEl.placeholder='Minutes'
+  subTaskMinEl.max=60
+  subTaskMinEl.type='number'
   const subTaskAddEl=document.createElement('div')
   subTaskAddEl.classList.add('subtask_add_el')
   subTaskAddEl.innerText=title ? 'Update' : 'Add'
@@ -326,10 +376,14 @@ const createSubTask = (subTask, updateTask, index, cancelCbk) => {
     subTaskTimeWrapper
   )
   subTaskAddEl.addEventListener('click', () => {
-    updateTask({
-      title: subTaskTitleEl.value,
-      total_time: (subTaskHoursEl.value ? subTaskHoursEl.value + 'h ' : '') + (subTaskMinEl.value ? subTaskMinEl.value + 'm' : '')
-    }, index)
+    if(subTaskTitleEl.value) {
+      updateTask({
+        title: subTaskTitleEl.value,
+        total_time: (subTaskHoursEl.value ? subTaskHoursEl.value + 'h ' : '') + (subTaskMinEl.value ? subTaskMinEl.value + 'm' : '')
+      }, index)  
+    } else {
+      showMessage('Title is required to create sub task', 'red')
+    } 
   })
   subTaskCancelEl.addEventListener('click', cancelCbk)
   return subtask_create_wrapper
@@ -381,17 +435,17 @@ const updateSubTask = (taskId, data) => {
             })
           } else if(data) {
             if(data === 'Success') {
-              showMessage('Successfully Updated task')
+              showMessage('Successfully Updated task', 'green')
               getTasks(token)
             } else {
-              showMessage('Failure in updating task')
+              showMessage('Failure in updating task', 'red')
             }
           }
         }
       })
     })
   } else {
-    showMessage('Title and date is mandatory')
+    showMessage('Title and date is mandatory', 'red')
   }
 }
 
@@ -421,12 +475,14 @@ const edit_task = (task, updateTask, cancelCbk) => {
   const hourInp=document.createElement('input')
   hourInp.classList.add('time_hours', 'input_cont')
   hourInp.value=hour || ""
-  hourInp.type='text'
+  hourInp.type='number'
+  hourInp.max=23
   hourInp.placeholder='hours'
   const minInp=document.createElement('input')
   minInp.classList.add('time_minutes', 'input_cont')
   minInp.value=min || ""
-  minInp.type='text'
+  minInp.type='number'
+  minInp.max=60
   minInp.placeholder='minutes'
   const time_wrapper_el=document.createElement('div')
   time_wrapper_el.classList.add('task_time')

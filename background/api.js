@@ -16,6 +16,9 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
                 sendResponse(await update_task(message.token || '', message.id, message.data || {}))
                 break;
             }
+            case 'DELETE_TASK': {
+                sendResponse(await delete_task(message.token || '', message.id))
+            }
             default:
                 console.log('Not a valid API')
         }
@@ -123,4 +126,35 @@ const update_task = (token, taskId, taskObj) => {
     } else {
         return 'Title is mandatory to update a task'
     }
+}
+
+const delete_task = (token, taskId) => {
+    console.log(`deleting tasks with id ${taskId}`)
+    return fetch(
+        `${ENDPOINT}api/tasks/${taskId}`,
+        {
+            method: 'DELETE',
+            headers: {
+            'Authorization': token,
+            'Content-Type': 'application/json'
+            }
+        }
+    )
+    .then(resp => resp.json())
+    .then(data => {
+        if(data && data.title && data.title === "401 Unauthorized") {
+            return {
+                'refresh_token': true
+            }
+        }
+        else if(data && data.status && data.status.toLowerCase() === 'success') {
+            return 'Success'
+        } else {
+            return 'Failure'
+        }
+    })
+    .catch(err => {
+        console.log(err)
+        return 'Failure'
+    })    
 }
