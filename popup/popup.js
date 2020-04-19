@@ -1,13 +1,16 @@
 $(document).ready(function() {
   console.log('sending message to authenticate')
+  toggleMask('Authenticating the User...')
   chrome.runtime.sendMessage({
     'type': 'authenticate'
   },
   async response => {
+    toggleMask()
     if(chrome.runtime.lastError) {
       console.log("error: ", chrome.runtime.lastError);
     } else{
       if(response && response.status && response.status.toLowerCase() === 'success') {
+        $('.task_wrapper').show()
         updateUserName(response.data && response.data.username || '')
         setCurrentDate()
         getTasks(response.data.token)
@@ -17,14 +20,25 @@ $(document).ready(function() {
   bindEvents()
 })
 
+// common functions starts
 const updateUserName = username => document.getElementById('username').innerText = username || ''
 const setCurrentDate = () => document.getElementById('task_date').value=new Date().toISOString().substring(0, 10)
-const renderBulletIcon = () => {
+
+const renderBulletIcon = (is_selected, bulletClickCbk) => {
   const bulletEl= document.createElement('div')
   bulletEl.classList.add('bullet_el')
   const bulletIcon=document.createElement('i')
   bulletIcon.classList.add('fas', 'font-avg-icon', 'fa-check')
   bulletEl.append(bulletIcon)
+  if(is_selected) {
+    bulletIcon.style.display='block'
+    bulletEl.style.background='#fff'
+  }
+  bulletEl.addEventListener('click', function() {
+    bulletIcon.style.display=is_selected ? 'none' : 'block'
+    bulletEl.style.background=is_selected ? 'transparent' : '#fff'
+    bulletClickCbk(!is_selected)
+  })
   return bulletEl
 }
 
@@ -47,16 +61,6 @@ const bindEvents = () => {
       $(".mytasks_list").addClass('show')
     }
   })
-  $(".completed_tasks span").off('click').on('click', function() {
-    const taskWrapper=$('.completed_list')
-    if(taskWrapper.hasClass('show')) {
-      $(this).text('Show')
-      taskWrapper.removeClass('show')
-    } else {
-      $(this).text('Hide')
-      taskWrapper.addClass('show')
-    }
-  })
   $('.create_task').off('click').on('click', function() {
     const titleEl=$('#task_title')
     const descEl=$('#desc')
@@ -76,6 +80,7 @@ const bindEvents = () => {
       minEl[0].value=''
       chrome.storage.local.get(['access_token'], function(result) {
         let token = result.access_token || ''
+        toggleMask('Creating the task...')
         chrome.runtime.sendMessage({
           'type': 'API',
           'name': 'CREATE_TASK',
@@ -88,6 +93,7 @@ const bindEvents = () => {
             sub_tasks: '[]'
           }
         }, data => {
+          toggleMask()
           if(chrome.runtime.lastError) {
             console.log("error: ", chrome.runtime.lastError);
           } else{      
@@ -127,6 +133,20 @@ const showMessage = (message, color) => {
   }, 5000)
 }
 
+const toggleMask = message => {
+  if(message) {
+    if(!$('body').hasClass('show_mask')) {
+      $('body').addClass('show_mask')
+      document.getElementById('mask_info').innerText=message
+    }
+  } else {
+    $('body').removeClass('show_mask')
+    document.getElementById('mask_info').innerText=''
+  }
+}
+// common function ends
+
+// DOM render function starts
 const renderAllTasks = (tasks) => {
   document.getElementById('mytasks').innerHTML=''
   if(tasks && Array.isArray(tasks) && tasks.length) {
@@ -197,7 +217,16 @@ const renderTask = (taskData) => {
   const delTaskEl=document.createElement('i')
   delTaskEl.classList.add('font-avg-icon', 'fas', 'fa-trash')
   delTaskEl.title='Delete Task'
-  const bulletIcon=renderBulletIcon()
+  const bulletIcon=renderBulletIcon(is_completed.toLowerCase() === 'true' ? true : false, (is_selected) => {
+    updateSubTask(id, {
+      title,
+      description,
+      date,
+      total_time,
+      is_completed: is_selected,
+      sub_tasks: JSON.stringify(sub)
+    })
+  })
   taskLineWrapper.append(
     dateEl,
     moreInfoEl
@@ -248,12 +277,14 @@ const renderTask = (taskData) => {
     chrome.storage.local.get(['access_token'], function(result) {
       showMessage('Delete task is initiated')
       let token = result.access_token || ''
+      toggleMask('Deleting the task...')
       chrome.runtime.sendMessage({
         'type': 'API',
         'name': 'DELETE_TASK',
         'token': token,
         id
       }, data => {
+        toggleMask()
         if(chrome.runtime.lastError) {
           console.log("error: ", chrome.runtime.lastError);
         } else{
@@ -322,7 +353,13 @@ const renderSubTask = (sub_tasks, updateTask) => {
         updateTask({}, index)
       })
       subTaskIconWrapper.append(
-        renderBulletIcon(),
+        renderBulletIcon(task.is_completed, (is_selected) => {
+          updateTask({
+            title: task.title,
+            total_time: task.total_time,
+            is_completed: is_selected
+          }, index)
+        }),
         subTaskCont,
         editBtn,
         delBtn
@@ -336,7 +373,8 @@ const renderSubTask = (sub_tasks, updateTask) => {
 const createSubTask = (subTask, updateTask, index, cancelCbk) => {
   const {
     title,
-    total_time
+    total_time,
+    is_completed
   } = subTask
   const hourSplitter=total_time ? total_time.split('h ') : []
   const hour=hourSplitter[0] ? hourSplitter[0] : ''
@@ -386,7 +424,8 @@ const createSubTask = (subTask, updateTask, index, cancelCbk) => {
     if(subTaskTitleEl.value) {
       updateTask({
         title: subTaskTitleEl.value,
-        total_time: (subTaskHoursEl.value ? subTaskHoursEl.value + 'h ' : '') + (subTaskMinEl.value ? subTaskMinEl.value + 'm' : '')
+        total_time: (subTaskHoursEl.value ? subTaskHoursEl.value + 'h ' : '') + (subTaskMinEl.value ? subTaskMinEl.value + 'm' : ''),
+        is_completed
       }, index)  
     } else {
       showMessage('Title is required to create sub task', '#e75b65')
@@ -394,66 +433,6 @@ const createSubTask = (subTask, updateTask, index, cancelCbk) => {
   })
   subTaskCancelEl.addEventListener('click', cancelCbk)
   return subtask_create_wrapper
-}
-
-const getTasks = token => {
-  chrome.runtime.sendMessage({
-    'type': 'API',
-    'name': 'GET_ALL_TASKS',
-    'token': token || ''
-  }, taskList => {
-    if(chrome.runtime.lastError) {
-      console.log("error: ", chrome.runtime.lastError);
-    } else{
-      if(taskList && taskList.refresh_token) {
-        showMessage('Token expired. Refreshing...')
-        chrome.runtime.sendMessage({
-          'type': 'refreshToken'
-        })
-      } else if(taskList && taskList.data && Array.isArray(taskList.data)) {
-        renderAllTasks(taskList.data)
-      }
-      else {
-        renderAllTasks([])
-      }
-    }
-  })
-}
-
-const updateSubTask = (taskId, data) => {
-  if(data.title && data.date) {
-    chrome.storage.local.get(['access_token'], function(result) {
-      showMessage('Updating task is initiated')
-      let token = result.access_token || ''
-      chrome.runtime.sendMessage({
-        'type': 'API',
-        'name': 'UPDATE_TASK',
-        'token': token,
-        id: taskId,
-        data
-      }, data => {
-        if(chrome.runtime.lastError) {
-          console.log("error: ", chrome.runtime.lastError);
-        } else{    
-          if(data && data.refresh_token) {
-            showMessage('Token expired. Refreshing...')
-            chrome.runtime.sendMessage({
-              'type': 'refreshToken'
-            })
-          } else if(data) {
-            if(data === 'Success') {
-              showMessage('Successfully Updated task', '#3b9a6f')
-              getTasks(token)
-            } else {
-              showMessage('Failure in updating task', '#e75b65')
-            }
-          }
-        }
-      })
-    })
-  } else {
-    showMessage('Title and date is mandatory', '#e75b65')
-  }
 }
 
 const edit_task = (task, updateTask, cancelCbk) => {
@@ -538,3 +517,70 @@ const edit_task = (task, updateTask, cancelCbk) => {
   taskUpdateWrapper.append(updateWrapperEl)
   return taskUpdateWrapper
 }
+// DOM render function ends
+
+// API related functions starts
+const getTasks = token => {
+  toggleMask('Getting the tasks...')
+  chrome.runtime.sendMessage({
+    'type': 'API',
+    'name': 'GET_ALL_TASKS',
+    'token': token || ''
+  }, taskList => {
+    toggleMask()
+    if(chrome.runtime.lastError) {
+      console.log("error: ", chrome.runtime.lastError);
+    } else{
+      if(taskList && taskList.refresh_token) {
+        showMessage('Token expired. Refreshing...')
+        chrome.runtime.sendMessage({
+          'type': 'refreshToken'
+        })
+      } else if(taskList && taskList.data && Array.isArray(taskList.data)) {
+        renderAllTasks(taskList.data)
+      }
+      else {
+        renderAllTasks([])
+      }
+    }
+  })
+}
+
+const updateSubTask = (taskId, data) => {
+  if(data.title && data.date) {
+    chrome.storage.local.get(['access_token'], function(result) {
+      showMessage('Updating task is initiated')
+      let token = result.access_token || ''
+      toggleMask('Updating the task...')
+      chrome.runtime.sendMessage({
+        'type': 'API',
+        'name': 'UPDATE_TASK',
+        'token': token,
+        id: taskId,
+        data
+      }, data => {
+        toggleMask()
+        if(chrome.runtime.lastError) {
+          console.log("error: ", chrome.runtime.lastError);
+        } else{    
+          if(data && data.refresh_token) {
+            showMessage('Token expired. Refreshing...')
+            chrome.runtime.sendMessage({
+              'type': 'refreshToken'
+            })
+          } else if(data) {
+            if(data === 'Success') {
+              showMessage('Successfully Updated task', '#3b9a6f')
+              getTasks(token)
+            } else {
+              showMessage('Failure in updating task', '#e75b65')
+            }
+          }
+        }
+      })
+    })
+  } else {
+    showMessage('Title and date is mandatory', '#e75b65')
+  }
+}
+// API related function ends
