@@ -8,7 +8,7 @@ chrome.storage.local.get(['firebase_config'], function(result) {
 chrome.runtime.onInstalled.addListener(function() {
     alert('Plugin Initialized')
     // Initialize Firebase
-    if(typeof firebase !== 'undefined') {
+    if(typeof firebase !== 'undefined' && !firebase.apps.length) {
         console.log('initializing firebase')
         firebase.initializeApp(firebaseConfig);
     } else {
@@ -109,12 +109,12 @@ const authenticateUser = cbk => {
     } catch(err) {
         console.log(err)
         alert('reinitializing firebase')
-        if(typeof firebase !== 'undefined') {
+        if(typeof firebase !== 'undefined' && !firebase.apps.length) {
             console.log('initializing firebase')
             firebase.initializeApp(firebaseConfig);
             authenticateUser(cbk)
         } else {
-            alert('Error in initialising firebase')
+            alert('Error in initialising firebase or firebase already initialized')
         }
     }
 }
