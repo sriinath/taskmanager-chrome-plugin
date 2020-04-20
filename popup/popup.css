@@ -4,14 +4,14 @@ body {
     font-size: 14px;
     background: #373f4d;
     color: #f9f9f9;
+    min-width: 200px;
+    min-height: 200px;
 }
 .task_body {
     padding: 10px 0px 30px;
 }
 .task_wrapper {
     display: none;
-    min-width: 200px;
-    min-height: 200px;
     width: 400px;
     max-height: 600px;
 }
