@@ -1,11 +1,16 @@
 const ENDPOINT='https://tasks-data-tracker.herokuapp.com/'
-
+let NOTIFIER_API_KEY=''
+chrome.storage.local.get(['NOTIFIER_API_KEY'], function(result) {
+    if(result && result['NOTIFIER_API_KEY']) {
+        NOTIFIER_API_KEY=result['NOTIFIER_API_KEY']
+    }
+});
 chrome.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
     console.log('message received', message)
     if(message && message.type && message.type === 'API' && message.name) {
         switch(message.name) {
             case "GET_ALL_TASKS": {
-                sendResponse(await getAllTasks(message.token || ''))
+                sendResponse(await getAllTasks(message.token || '', message.filters || {}))
                 break
             }
             case 'CREATE_TASK': {
@@ -26,10 +31,16 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
     return true
 })
 
-const getAllTasks = (token) => {
+const getAllTasks = (token, filters) => {
     console.log('getting all tasks')
+    const {
+        limit,
+        offset,
+        start_date,
+        end_date
+    } = filters
     return fetch(
-      `${ENDPOINT}api/tasks`,
+      `${ENDPOINT}api/tasks?limit=${limit || 10}&offset=${offset || 0}&start_date=${start_date || ''}&end_date=${end_date || ''}`,
       {
         method: 'GET',
         headers: {

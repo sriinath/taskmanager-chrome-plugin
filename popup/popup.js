@@ -1,3 +1,7 @@
+let LIMIT=10
+let OFFSET=0
+let startDateFilter=''
+let endDateFilter=''
 $(document).ready(function() {
   console.log('sending message to authenticate')
   toggleMask('Authenticating the User...')
@@ -148,12 +152,103 @@ const toggleMask = message => {
 
 // DOM render function starts
 const renderAllTasks = (tasks) => {
-  document.getElementById('mytasks').innerHTML=''
-  if(tasks && Array.isArray(tasks) && tasks.length) {
-    tasks.map(task => document.getElementById('mytasks').append(renderTask(task)))
-  } else {
-    document.getElementById('mytasks').innerHTML='<center>No Tasks</center>'
+  const myTasksEl=document.getElementById('mytasks')
+  if(!OFFSET) {
+    myTasksEl.innerHTML=''
   }
+  if(tasks && Array.isArray(tasks) && tasks.length) {
+    if(!OFFSET) {
+      myTasksEl.append(renderFilter())
+    }
+    tasks.map(task => myTasksEl.append(renderTask(task)))
+    myTasksEl.append(showMore())
+  } else {
+    if(!OFFSET) {
+      myTasksEl.innerHTML='<center>No Tasks</center>'
+    }
+  }
+}
+
+const renderFilter = () => {
+  const filterWrapper=document.createElement('div')
+  filterWrapper.classList.add('filter_wrapper')
+  const startDateWr=document.createElement('div')
+  const startDateLab=document.createElement('label')
+  startDateLab.htmlFor='start_date_filter'
+  startDateLab.innerText='Start Date'
+  const startDateEl=document.createElement('input')
+  startDateEl.classList.add('start_filter', 'input_cont')
+  startDateEl.id='start_date_filter'
+  startDateEl.type='date'
+  startDateEl.value=startDateFilter
+  startDateWr.append(
+    startDateLab,
+    startDateEl
+  )
+  const endDateWr=document.createElement('div')
+  const endDateLab=document.createElement('label')
+  endDateLab.htmlFor='end_date_filter'
+  endDateLab.innerText='End Date'
+  const endDateEl=document.createElement('input')
+  endDateEl.classList.add('end_filter', 'input_cont')
+  endDateEl.id='end_date_filter'
+  endDateEl.type='date'
+  endDateEl.value=endDateFilter
+  startDateEl.addEventListener('change', e => {
+    startDateFilter=e.currentTarget.value
+    chrome.storage.local.get(['access_token'], function(result) {
+      showMessage('Start date filter is initiated')
+      OFFSET=0
+      let token = result.access_token || ''
+      getTasks(token)
+    })
+  })
+  endDateEl.addEventListener('change', e => {
+    endDateFilter=e.currentTarget.value
+    chrome.storage.local.get(['access_token'], function(result) {
+      showMessage('End date filter is initiated')
+      OFFSET=0
+      let token = result.access_token || ''
+      getTasks(token)
+    })
+  })
+  endDateWr.append(
+    endDateLab,
+    endDateEl
+  )
+  filterWrapper.append(
+    startDateWr,
+    endDateWr
+  )
+  filterEvents()
+  return filterWrapper
+}
+
+const showMore = () => {
+  const showMoreEl=document.createElement('div')
+  showMoreEl.classList.add('show_more')
+  showMoreEl.innerText='LOAD MORE'
+  showMoreEl.addEventListener('click', () => {
+    OFFSET+=1
+    chrome.storage.local.get(['access_token'], function(result) {
+      showMessage('Load more is initiated')
+      let token = result.access_token || ''
+      getTasks(token)
+      showMoreEl.remove()
+    })
+  })
+  return showMoreEl
+}
+
+const filterEvents = () => {
+  $('#start_date_filter').off('change').on('change', () => {
+    value=$(this).value
+    alert(value)
+  })
+  $('#end_date_filter').off('change').on('change', () => {
+    value=$(this).value
+    alert(value)
+  })
 }
 
 const renderTask = (taskData) => {
@@ -525,7 +620,13 @@ const getTasks = token => {
   chrome.runtime.sendMessage({
     'type': 'API',
     'name': 'GET_ALL_TASKS',
-    'token': token || ''
+    'token': token || '',
+    'filters': {
+      offset: OFFSET,
+      limit: LIMIT,
+      start_date: startDateFilter,
+      end_date: endDateFilter
+    }
   }, taskList => {
     toggleMask()
     if(chrome.runtime.lastError) {
