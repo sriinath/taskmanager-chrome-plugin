@@ -363,6 +363,30 @@ body.show_mask .mask_wrapper {
     padding: 20px;
     font-size: 16px;
 }
+.filter_wrapper {
+    display: flex;
+    padding: 15px 0px;
+    justify-content: space-between;
+}
+.show_more {
+    width: 100px;
+    padding: 10px;
+    border: 1px solid;
+    margin: 15px auto;
+    text-align: center;
+    border-radius: 5px;
+    background: #fff;
+    color: #373f4d;
+    cursor: pointer;
+}
+.show_more:hover {
+    background: #373f4d;
+    color: #fff;
+}
+.start_filter,
+.end_filter {
+    margin: 10px 0px;
+}
 /* loader css starts */
 .lds-roller {
     display: inline-block;
